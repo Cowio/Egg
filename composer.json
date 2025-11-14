@@ -1,5 +1,5 @@
 {
-  "name": "kaspe/egg",
+  "name": "g4/egg",
   "description": "Egg is an error tracking package for Laravel applications.",
   "keywords": ["laravel", "error tracking", "monitoring"],
   "type": "library",
