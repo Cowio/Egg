@@ -6,13 +6,13 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Kaspe\\Egg\\": "src/"
+      "G4\\Egg\\": "src/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "Kaspe\\Egg\\Providers\\EggServiceProvider"
+        "G4\\Egg\\Providers\\EggServiceProvider"
       ]
     }
   },
