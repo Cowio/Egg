@@ -1,0 +1,23 @@
+{
+  "name": "kaspe/egg",
+  "description": "Egg is an error tracking package for Laravel applications.",
+  "keywords": ["laravel", "error tracking", "monitoring"],
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Kaspe\\Egg\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Kaspe\\Egg\\Providers\\EggServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "require": {
+    "illuminate/support": "^10.0|^11.0|^12.0"
+  }
+}
