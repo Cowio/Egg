@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('egg_exceptions', function (Blueprint $table) {
-            //$table->id();
+            $table->id();
             $table->string('exception_class');
             $table->text('message');
             $table->string('file');
