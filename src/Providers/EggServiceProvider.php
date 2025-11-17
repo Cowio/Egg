@@ -16,6 +16,9 @@ class EggServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../config/egg.php' => config_path('egg.php'),
         ], 'egg-config');
+
+        // Publish migrations
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
     public function register()
