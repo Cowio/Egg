@@ -3,7 +3,7 @@
 namespace G4\Egg\Providers;
 
 use G4\Egg\Handlers\EggExceptionHandler;
-use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\ServiceProvider;
 
 class EggServiceProvider extends ServiceProvider
