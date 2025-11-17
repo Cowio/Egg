@@ -2,6 +2,8 @@
 
 namespace G4\Egg\Providers;
 
+use G4\Egg\Handlers\EggExceptionHandler;
+use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\ServiceProvider;
 
 class EggServiceProvider extends ServiceProvider
@@ -28,5 +30,11 @@ class EggServiceProvider extends ServiceProvider
         $this->commands([
             \G4\Egg\Console\InstallCommand::class,
         ]);
+
+        // Override the default exception handler
+        $this->app->singleton(
+            ExceptionHandler::class,
+            EggExceptionHandler::class
+        );
     }
 }

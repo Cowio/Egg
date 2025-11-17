@@ -41,6 +41,7 @@
       <path value="$PROJECT_DIR$/../ExceptionCreator/vendor" />
     </include_path>
   </component>
+  <component name="PhpProjectSharedConfiguration" php_language_level="8.5" />
   <component name="PhpStan">
     <PhpStan_settings>
       <phpstan_by_interpreter asDefaultInterpreter="true" interpreter_id="8faefc1d-e3ee-4d5d-8999-d68607780223" timeout="60000" />
