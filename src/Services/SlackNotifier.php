@@ -17,7 +17,21 @@ class SlackNotifier
             return false;
         }
 
-        $payload = json_encode(['text' => $message]);
+        $payload = json_encode
+        ([
+            'text' => $message,
+            'blocks' =>
+            [
+                [
+                    'type' => 'section',
+                    'text' =>
+                    [
+                        'type' => 'mrkdwn',
+                        'text' => $message,
+                    ],
+                ]
+            ]
+        ]);
         $options = [
             'http' => [
                 'method'  => 'POST',
@@ -31,4 +45,5 @@ class SlackNotifier
         return $result !== false;
     }
 }
+
 
