@@ -12,14 +12,12 @@ class SlackNotifier
      */
     public static function send(string $message): bool
     {
-        dump($message);
         $webhookUrl = config('egg.slack_webhook_url');
-        dump($webhookUrl);
         if (!$webhookUrl) {
             return false;
         }
 
-        $payload = json_encode(['text' => $message]);
+        $payload = json_encode(['text' => "```" . $message . "```"]);
         $options = [
             'http' => [
                 'method'  => 'POST',
@@ -30,7 +28,6 @@ class SlackNotifier
         ];
         $context = stream_context_create($options);
         $result = @file_get_contents($webhookUrl, false, $context);
-        dump("done");
         return $result !== false;
     }
 }
