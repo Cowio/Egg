@@ -2,6 +2,8 @@
 
 namespace G4\Egg\Services;
 
+use G4\Egg\Models\CaughtException;
+
 class SlackNotifier
 {
     /**
@@ -18,12 +20,12 @@ class SlackNotifier
         }
 
         // If a Throwable was passed, format it nicely
-        if ($exception instanceof \Throwable) {
-            $message   = $exception->getMessage();
-            $file      = $exception->getFile();
-            $line      = $exception->getLine();
-            $class     = get_class($exception);
-            $trace     = $exception->getTraceAsString();
+        if ($exception instanceof CaughtException) {
+            $message = $exception->message;
+            $file    = $exception->file;
+            $line    = $exception->line;
+            $class   = $exception->exception_class ?? 'Exception';
+            $trace   = $exception->trace ?? '';
 
             $payload = [
                 "blocks" => [
