@@ -19,7 +19,7 @@ class SlackNotifier
 
         $payload = json_encode
         ([
-            'text' => "Der er sket en fejl",
+            'text' => "Der er sket en fejl din spasser",
             'blocks' =>
             [
                 [
