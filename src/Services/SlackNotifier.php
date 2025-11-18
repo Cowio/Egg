@@ -27,7 +27,7 @@ class SlackNotifier
                     'text' =>
                     [
                         'type' => 'mrkdwn',
-                        'text' => "Shit doesnt work",
+                        'text' => $message,
                     ],
                 ]
             ]
