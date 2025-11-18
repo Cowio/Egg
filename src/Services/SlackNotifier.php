@@ -4,6 +4,8 @@ namespace G4\Egg\Services;
 
 class SlackNotifier
 {
+    private const MAX_BLOCK_TEXT = 2900;   // Slight margin under Slack's ~3000 limit
+    private const MAX_FALLBACK_TEXT = 3000;
     /**
      * Send a message to Slack using the webhook URL from the environment.
      *
@@ -15,6 +17,14 @@ class SlackNotifier
         $webhookUrl = config('egg.slack_webhook_url');
         if (!$webhookUrl) {
             return false;
+        }
+
+        if (function_exists('mb_substr')) {
+            $blockText = mb_substr($message, 0, self::MAX_BLOCK_TEXT, 'UTF-8');
+            $fallback  = mb_substr($message, 0, self::MAX_FALLBACK_TEXT, 'UTF-8');
+        } else {
+            $blockText = substr($message, 0, self::MAX_BLOCK_TEXT);
+            $fallback  = substr($message, 0, self::MAX_FALLBACK_TEXT);
         }
 
         $payload = json_encode
