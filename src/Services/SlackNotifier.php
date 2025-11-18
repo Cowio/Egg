@@ -2,6 +2,8 @@
 
 namespace G4\Egg\Services;
 
+use Throwable;
+
 class SlackNotifier
 {
     /**
@@ -35,17 +37,35 @@ class SlackNotifier
      *  - blocks, attachments: direct Slack payload overrides
      *  - username, icon_emoji, channel, thread_ts, unfurl_links, unfurl_media
      */
-    public static function send(string $message, array $options = []): bool
+    public static function send($message, array $options = []): bool
     {
-        // If a template is requested, delegate.
+        // If a template is requested, delegate with merged data.
         if (isset($options['template'])) {
-            $data = $options['data'] ?? [];
-            // Pass message as fallback text to template data.
-            $data['fallback_text'] = $message;
+            $normalized = self::normalizeExceptionData($message) ?? [];
+            $data = array_merge($normalized, $options['data'] ?? []);
+            if (!isset($data['fallback_text']) && is_string($message)) {
+                $data['fallback_text'] = $message;
+            }
             return self::sendTemplate($options['template'], $data, $options);
         }
 
-        $payload = self::buildBasePayload($message, $options);
+        // Auto-detect exception-like payloads and use default template.
+        $defaultTemplate = config('egg.slack_default_template', 'exception_card');
+        if ($tplData = self::normalizeExceptionData($message)) {
+            return self::sendTemplate($defaultTemplate, $tplData, $options);
+        }
+
+        // If associative array payload with explicit blocks/attachments
+        if (is_array($message) && (isset($message['blocks']) || isset($message['attachments']))) {
+            $base = self::buildBasePayload($message['text'] ?? ($options['text'] ?? ''), $options);
+            unset($base['text']);
+            $payload = array_merge($base, $message);
+            return self::postToWebhook($payload);
+        }
+
+        // Fallback to plain text.
+        $text = is_string($message) ? $message : json_encode($message);
+        $payload = self::buildBasePayload($text ?: '', $options);
         return self::postToWebhook($payload);
     }
 
@@ -140,6 +160,41 @@ class SlackNotifier
         $context = stream_context_create($options);
         $result = @file_get_contents($webhookUrl, false, $context);
         return $result !== false;
+    }
+
+    /**
+     * Normalize exception-like data from a message or payload.
+     * Extracts common fields for templates like 'exception_card'.
+     */
+    protected static function normalizeExceptionData($data): ?array
+    {
+        // If data is already an array, assume it's normalized.
+        if (is_array($data)) {
+            return $data;
+        }
+
+        // If data is a string, try to decode as JSON.
+        if (is_string($data)) {
+            $decoded = json_decode($data, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $decoded;
+            }
+        }
+
+        // For Throwable objects, extract relevant data.
+        if ($data instanceof Throwable) {
+            return [
+                'exception_class' => get_class($data),
+                'message' => $data->getMessage(),
+                'file' => $data->getFile(),
+                'line' => $data->getLine(),
+                'trace' => $data->getTraceAsString(),
+                // Add any other normalization as needed.
+            ];
+        }
+
+        // Unknown format, return null.
+        return null;
     }
 
     /* ===================== TEMPLATE BUILDERS ===================== */
