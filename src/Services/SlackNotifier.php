@@ -14,6 +14,8 @@ class SlackNotifier
         'success' => [self::class, 'buildSuccessTemplate'],
         'warning' => [self::class, 'buildWarningTemplate'],
         'info' => [self::class, 'buildInfoTemplate'],
+        // New detailed card-style exception template
+        'exception_card' => [self::class, 'buildExceptionCardTemplate'],
     ];
 
     /**
@@ -256,4 +258,91 @@ class SlackNotifier
             ],
         ];
     }
+
+    protected static function buildExceptionCardTemplate(array $data): array
+    {
+        $message = (string)($data['message'] ?? $data['text'] ?? $data['fallback_text'] ?? 'An error occurred');
+        $level = (string)($data['level'] ?? 'ERROR');
+        $session = (string)($data['session_uuid'] ?? $data['session'] ?? '');
+        $type = (string)($data['exception_class'] ?? $data['type'] ?? 'Exception');
+        $file = (string)($data['file'] ?? 'unknown.php');
+        $line = (string)($data['line'] ?? '');
+        $fileLine = $line !== '' ? "$file:$line" : $file;
+
+        // Optional action buttons
+        $openUrl = $data['open_url'] ?? $data['url'] ?? null;
+        $openTempUrl = $data['open_tempurl'] ?? $data['tempurl'] ?? null;
+
+        // Build blocks inside an attachment to get the left color bar.
+        $blocks = [];
+
+        // Message section
+        $blocks[] = [
+            'type' => 'section',
+            'text' => [ 'type' => 'mrkdwn', 'text' => "*Message*\n" . $message ],
+        ];
+
+        // Level
+        $blocks[] = [
+            'type' => 'section',
+            'text' => [ 'type' => 'mrkdwn', 'text' => "*Level*\n`$level`" ],
+        ];
+
+        // Session uuid (optional)
+        if ($session !== '') {
+            $blocks[] = [
+                'type' => 'section',
+                'text' => [ 'type' => 'mrkdwn', 'text' => "*Session uuid*\n`$session`" ],
+            ];
+        }
+
+        // Type
+        $blocks[] = [
+            'type' => 'section',
+            'text' => [ 'type' => 'mrkdwn', 'text' => "*Type*\n`$type`" ],
+        ];
+
+        // File
+        $blocks[] = [
+            'type' => 'section',
+            'text' => [ 'type' => 'mrkdwn', 'text' => "*File*\n`$fileLine`" ],
+        ];
+
+        // Optional actions row
+        $elements = [];
+        if ($openUrl) {
+            $elements[] = [
+                'type' => 'button',
+                'text' => [ 'type' => 'plain_text', 'text' => 'Open Url' ],
+                'url' => $openUrl,
+            ];
+        }
+        if ($openTempUrl) {
+            $elements[] = [
+                'type' => 'button',
+                'text' => [ 'type' => 'plain_text', 'text' => 'Open Tempurl' ],
+                'url' => $openTempUrl,
+            ];
+        }
+        if (!empty($elements)) {
+            $blocks[] = [
+                'type' => 'actions',
+                'elements' => $elements,
+            ];
+        }
+
+        $fallback = ($type ? ($type . ': ') : '') . $message;
+
+        return [
+            'fallback' => $fallback,
+            'attachments' => [
+                [
+                    'color' => 'danger',
+                    'blocks' => $blocks,
+                    'footer' => date('Y-m-d H:i:s'),
+                ],
+            ],
+        ];
+    }
 }
+
