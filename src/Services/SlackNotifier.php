@@ -37,7 +37,7 @@ class SlackNotifier
                     'text' =>
                     [
                         'type' => 'mrkdwn',
-                        'text' => $message,
+                        'text' => $blockText,
                         dump($message),
                     ],
                 ]
