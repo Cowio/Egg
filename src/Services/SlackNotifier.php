@@ -9,69 +9,63 @@ class SlackNotifier
     /**
      * Send a formatted exception message to Slack.
      *
-     * @param \Throwable|string $exception
+     * @param CaughtException $exception
      * @return bool true on success, false on failure
      */
-    public static function send($exception): bool
+    public static function send(CaughtException $exception): bool
     {
         $webhookUrl = config('egg.slack_webhook_url');
         if (!$webhookUrl) {
             return false;
         }
 
-        // If a Throwable was passed, format it nicely
-        if ($exception instanceof CaughtException) {
-            $message = $exception->message;
-            $file    = $exception->file;
-            $line    = $exception->line;
-            $class   = $exception->exception_class ?? 'Exception';
-            $trace   = $exception->trace ?? '';
+        $message = $exception->message;
+        $file    = $exception->file;
+        $line    = $exception->line;
+        $class   = $exception->exception_class ?? 'Exception';
+        $trace   = $exception->trace ?? '';
 
-            $payload = [
-                "blocks" => [
-                    [
-                        "type" => "header",
-                        "text" => [
-                            "type" => "plain_text",
-                            "text" => "🚨 Exception Reported",
-                            "emoji" => true
-                        ]
-                    ],
-                    [
-                        "type" => "section",
-                        "fields" => [
-                            [
-                                "type" => "mrkdwn",
-                                "text" => "*Message:*\n{$message}"
-                            ],
-                            [
-                                "type" => "mrkdwn",
-                                "text" => "*Type:*\n`{$class}`"
-                            ],
-                            [
-                                "type" => "mrkdwn",
-                                "text" => "*File:*\n`{$file}:{$line}`"
-                            ],
-                        ]
-                    ],
-                    [
-                        "type" => "divider"
-                    ],
-                    [
-                        "type" => "section",
-                        "text" => [
+        // Add a fallback text for Slack
+        $payload = [
+            "text" => "Exception: {$message} in {$file}:{$line}", // fallback
+            "blocks" => [
+                [
+                    "type" => "header",
+                    "text" => [
+                        "type" => "plain_text",
+                        "text" => "🚨 Exception Reported",
+                        "emoji" => true
+                    ]
+                ],
+                [
+                    "type" => "section",
+                    "fields" => [
+                        [
                             "type" => "mrkdwn",
-                            "text" => "*Stack Trace:*\n```{$trace}```"
-                        ]
+                            "text" => "*Message:*\n{$message}"
+                        ],
+                        [
+                            "type" => "mrkdwn",
+                            "text" => "*Type:*\n`{$class}`"
+                        ],
+                        [
+                            "type" => "mrkdwn",
+                            "text" => "*File:*\n`{$file}:{$line}`"
+                        ],
+                    ]
+                ],
+                [
+                    "type" => "divider"
+                ],
+                [
+                    "type" => "section",
+                    "text" => [
+                        "type" => "mrkdwn",
+                        "text" => "*Stack Trace:*\n```{$trace}```"
                     ]
                 ]
-            ];
-        } else {
-            // Fallback: raw messages still formatted as code block
-            $payload = [
-                "text" => "```{$exception}```"
-            ];
-        }
+            ]
+        ];
 
         $options = [
             'http' => [
