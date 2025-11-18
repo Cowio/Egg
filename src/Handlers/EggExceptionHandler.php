@@ -3,6 +3,7 @@
 namespace G4\Egg\Handlers;
 
 use G4\Egg\Models\CaughtException;
+use G4\Egg\Services\SlackNotifier;
 use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -17,6 +18,8 @@ class EggExceptionHandler extends ExceptionHandler
         $exception->category = 'general'; // You can categorize exceptions if needed
         $exception->hash = md5($e->getMessage() . $e->getFile() . $e->getLine());
         $exception->save();
+
+        SlackNotifier::send($exception);
 
         parent::report($e); // Call the parent report method to ensure default behavior
     }
