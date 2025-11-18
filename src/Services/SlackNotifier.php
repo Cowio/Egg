@@ -5,24 +5,133 @@ namespace G4\Egg\Services;
 class SlackNotifier
 {
     /**
-     * Send a message to Slack using the webhook URL from the environment.
-     *
-     * @param string $message
-     * @return bool true on success, false on failure
+     * Predefined templates. Each template returns an array payload (without webhook url) when built.
+     * You can add more templates here or override dynamically by calling registerTemplate.
      */
-    public static function send(string $message): bool
+    protected static array $templates = [
+        'exception' => [self::class, 'buildExceptionTemplate'],
+        'simple' => [self::class, 'buildSimpleTemplate'],
+        'success' => [self::class, 'buildSuccessTemplate'],
+        'warning' => [self::class, 'buildWarningTemplate'],
+        'info' => [self::class, 'buildInfoTemplate'],
+    ];
+
+    /**
+     * Register or override a template at runtime.
+     */
+    public static function registerTemplate(string $name, callable $builder): void
+    {
+        self::$templates[$name] = $builder;
+    }
+
+    /**
+     * Send a message to Slack using the webhook URL from the environment.
+     * Backward compatible: if only message provided, sends plain text.
+     * Options may include:
+     *  - template: string template name
+     *  - data: array data passed to template builder
+     *  - blocks, attachments: direct Slack payload overrides
+     *  - username, icon_emoji, channel, thread_ts, unfurl_links, unfurl_media
+     */
+    public static function send(string $message, array $options = []): bool
+    {
+        // If a template is requested, delegate.
+        if (isset($options['template'])) {
+            $data = $options['data'] ?? [];
+            // Pass message as fallback text to template data.
+            $data['fallback_text'] = $message;
+            return self::sendTemplate($options['template'], $data, $options);
+        }
+
+        $payload = self::buildBasePayload($message, $options);
+        return self::postToWebhook($payload);
+    }
+
+    /**
+     * Send using a named template.
+     */
+    public static function sendTemplate(string $template, array $data = [], array $options = []): bool
+    {
+        if (!isset(self::$templates[$template])) {
+            // Fallback to simple text if template not found.
+            return self::send('[Unknown template] ' . ($data['fallback_text'] ?? ''), $options);
+        }
+
+        $builder = self::$templates[$template];
+        $templatePayload = \call_user_func($builder, $data, $options);
+
+        // Merge base payload (username/icon/channel) with template content.
+        $base = self::buildBasePayload($templatePayload['fallback'] ?? ($data['fallback_text'] ?? ''), $options);
+        // Remove fallback so Slack doesn't display unintended text if blocks are present.
+        unset($base['text']);
+
+        // Combine.
+        $payload = array_merge($base, $templatePayload);
+
+        return self::postToWebhook($payload);
+    }
+
+    /**
+     * Build base payload using general options and config defaults.
+     */
+    protected static function buildBasePayload(string $text, array $options): array
+    {
+        $payload = [
+            'text' => $text,
+        ];
+
+        // Provide overridable defaults from config.
+        $username = $options['username'] ?? config('egg.slack_username');
+        if ($username) {
+            $payload['username'] = $username;
+        }
+        $icon = $options['icon_emoji'] ?? config('egg.slack_icon');
+        if ($icon) {
+            $payload['icon_emoji'] = $icon;
+        }
+        $channel = $options['channel'] ?? config('egg.slack_channel');
+        if ($channel) {
+            $payload['channel'] = $channel;
+        }
+
+        // Allow direct overrides.
+        foreach (['thread_ts','unfurl_links','unfurl_media'] as $key) {
+            if (array_key_exists($key, $options)) {
+                $payload[$key] = $options[$key];
+            }
+        }
+
+        // Direct blocks / attachments overrides.
+        if (isset($options['blocks'])) {
+            $payload['blocks'] = $options['blocks'];
+        }
+        if (isset($options['attachments'])) {
+            $payload['attachments'] = $options['attachments'];
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Actually POST the payload to Slack.
+     */
+    protected static function postToWebhook(array $payload): bool
     {
         $webhookUrl = config('egg.slack_webhook_url');
         if (!$webhookUrl) {
             return false;
         }
 
-        $payload = json_encode(['text' => $message]);
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            return false;
+        }
+
         $options = [
             'http' => [
                 'method'  => 'POST',
                 'header'  => "Content-Type: application/json\r\n",
-                'content' => $payload,
+                'content' => $json,
                 'timeout' => 5,
             ],
         ];
@@ -30,5 +139,121 @@ class SlackNotifier
         $result = @file_get_contents($webhookUrl, false, $context);
         return $result !== false;
     }
-}
 
+    /* ===================== TEMPLATE BUILDERS ===================== */
+
+    protected static function buildSimpleTemplate(array $data): array
+    {
+        $text = $data['text'] ?? $data['fallback_text'] ?? 'Notification';
+        return [
+            'fallback' => $text,
+            'blocks' => [
+                [
+                    'type' => 'section',
+                    'text' => [ 'type' => 'mrkdwn', 'text' => $text ],
+                ],
+            ],
+        ];
+    }
+
+    protected static function buildSuccessTemplate(array $data): array
+    {
+        $title = $data['title'] ?? 'Success';
+        $details = $data['details'] ?? ($data['text'] ?? 'Operation completed');
+        return [
+            'fallback' => $title . ' - ' . $details,
+            'attachments' => [
+                [
+                    'color' => 'good',
+                    'title' => $title,
+                    'text' => $details,
+                ],
+            ],
+        ];
+    }
+
+    protected static function buildWarningTemplate(array $data): array
+    {
+        $title = $data['title'] ?? 'Warning';
+        $details = $data['details'] ?? ($data['text'] ?? 'Attention required');
+        return [
+            'fallback' => $title . ' - ' . $details,
+            'attachments' => [
+                [
+                    'color' => 'warning',
+                    'title' => $title,
+                    'text' => $details,
+                ],
+            ],
+        ];
+    }
+
+    protected static function buildInfoTemplate(array $data): array
+    {
+        $title = $data['title'] ?? 'Info';
+        $details = $data['details'] ?? ($data['text'] ?? 'Information');
+        return [
+            'fallback' => $title . ' - ' . $details,
+            'attachments' => [
+                [
+                    'color' => '#439FE0',
+                    'title' => $title,
+                    'text' => $details,
+                ],
+            ],
+        ];
+    }
+
+    protected static function buildExceptionTemplate(array $data): array
+    {
+        // Expect keys: exception_class, message, file, line, trace
+        $class = $data['exception_class'] ?? 'UnknownException';
+        $message = $data['message'] ?? 'No message';
+        $file = $data['file'] ?? 'unknown.php';
+        $line = $data['line'] ?? 0;
+        $trace = $data['trace'] ?? '';
+
+        // Trim trace to avoid hitting Slack limits (max ~40k chars for blocks).
+        $maxTrace = 1200;
+        if (strlen($trace) > $maxTrace) {
+            $trace = substr($trace, 0, $maxTrace) . "\n... (truncated)";
+        }
+
+        $fallback = "$class: $message";
+
+        $blocks = [
+            [
+                'type' => 'header',
+                'text' => [ 'type' => 'plain_text', 'text' => 'Exception Caught' ],
+            ],
+            [
+                'type' => 'section',
+                'text' => [ 'type' => 'mrkdwn', 'text' => "*Class:* `$class`\n*Message:* $message" ],
+            ],
+            [
+                'type' => 'context',
+                'elements' => [
+                    [ 'type' => 'mrkdwn', 'text' => "*File:* `$file:$line`" ],
+                ],
+            ],
+        ];
+
+        if ($trace) {
+            $blocks[] = [
+                'type' => 'section',
+                'text' => [ 'type' => 'mrkdwn', 'text' => "*Trace:*\n```" . $trace . "```" ],
+            ];
+        }
+
+        return [
+            'fallback' => $fallback,
+            'blocks' => $blocks,
+            'attachments' => [
+                [
+                    'color' => 'danger',
+                    'footer' => date('Y-m-d H:i:s'),
+                ],
+            ],
+        ];
+    }
+}
