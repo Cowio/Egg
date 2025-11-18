@@ -12,7 +12,9 @@ class SlackNotifier
      */
     public static function send(string $message): bool
     {
+        dump($message);
         $webhookUrl = getenv('slack_webhook_url');
+        dump($webhookUrl);
         if (!$webhookUrl) {
             return false;
         }
@@ -28,6 +30,7 @@ class SlackNotifier
         ];
         $context = stream_context_create($options);
         $result = @file_get_contents($webhookUrl, false, $context);
+        dump("done");
         return $result !== false;
     }
 }

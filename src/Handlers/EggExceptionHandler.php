@@ -19,6 +19,7 @@ class EggExceptionHandler extends ExceptionHandler
         $exception->hash = md5($e->getMessage() . $e->getFile() . $e->getLine());
         $exception->save();
 
+        dump("EggExceptionHandler: Send SlackNotification");
         SlackNotifier::send($exception);
 
         parent::report($e); // Call the parent report method to ensure default behavior
