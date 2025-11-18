@@ -13,7 +13,7 @@ class SlackNotifier
     public static function send(string $message): bool
     {
         dump($message);
-        $webhookUrl = config('slack_webhook_url');
+        $webhookUrl = config('egg.slack_webhook_url');
         dump($webhookUrl);
         if (!$webhookUrl) {
             return false;
