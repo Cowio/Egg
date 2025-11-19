@@ -16,6 +16,7 @@ class SlackNotifier
     {
         $webhookUrl = config("egg.slack_webhook_url");
         if (!$webhookUrl) {
+            dump("Slack webhook URL is not configured.");
             return false;
         }
 
