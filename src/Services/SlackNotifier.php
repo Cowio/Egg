@@ -22,7 +22,7 @@ class SlackNotifier
 
         if ($content instanceof CaughtException)
         {
-            dump("Sending exception to Slack: ", $content);
+            dump("Sending exception to Slack");
             $exceptionClass = $content->exception_class ?? "Not Found";
             $message = $content->message ?? "Not Found";
             $file = $content->file ?? "Not Found";
