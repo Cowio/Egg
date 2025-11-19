@@ -4,8 +4,6 @@ namespace G4\Egg\Services;
 
 class SlackNotifier
 {
-    private const MAX_BLOCK_TEXT = 2900;   // Slight margin under Slack's ~3000 limit
-    private const MAX_FALLBACK_TEXT = 3000;
     /**
      * Send a message to Slack using the webhook URL from the environment.
      *
@@ -14,41 +12,63 @@ class SlackNotifier
      */
     public static function send(string $message): bool
     {
-        $webhookUrl = config('egg.slack_webhook_url');
+        $webhookUrl = config("egg.slack_webhook_url");
         if (!$webhookUrl) {
             return false;
         }
 
-        if (function_exists('mb_substr')) {
-            $blockText = mb_substr($message, 0, self::MAX_BLOCK_TEXT, 'UTF-8');
-            $fallback  = mb_substr($message, 0, self::MAX_FALLBACK_TEXT, 'UTF-8');
-        } else {
-            $blockText = substr($message, 0, self::MAX_BLOCK_TEXT);
-            $fallback  = substr($message, 0, self::MAX_FALLBACK_TEXT);
-        }
-
-        $payload = json_encode
-        ([
-            'text' => "Der er sket en fejl din spasser",
-            'blocks' =>
-            [
+        $payload = json_encode([
+            "text" => "Fallback tekst: En alvorlig fejl er sket.",
+            "blocks" => [
                 [
-                    'type' => 'section',
-                    'text' =>
-                    [
-                        'type' => 'mrkdwn',
-                        'text' => $blockText,
-                        dump($message),
-                    ],
+                    "type" => "header",
+                    "text" => [
+                        "type" => "plain_text",
+                        "text" => "🚨 Ny Exception Rapporteret (EggBot)"
+                    ]
+                ],
+                [
+                    "type" => "section",
+                    "fields" => [
+                        [
+                            "type" => "mrkdwn",
+                            "text" => "*Type:*\n`RuntimeException`"
+                        ],
+                        [
+                            "type" => "mrkdwn",
+                            "text" => "*Miljø:*\n`production`"
+                        ],
+                        [
+                            "type" => "mrkdwn",
+                            "text" => "*Fil:*\n`/var/www/html/app/Services/EggLayer.php:42`"
+                        ]
+                    ]
+                ],
+                [
+                    "type" => "divider"
+                ],
+                [
+                    "type" => "section",
+                    "text" => [
+                        "type" => "mrkdwn",
+                        "text" => "*Besked:*\n`Something about eggs went terribly wrong.`"
+                    ]
+                ],
+                [
+                    "type" => "section",
+                    "text" => [
+                        "type" => "mrkdwn",
+                        "text" => "*Stack Trace (Uddrag):*\n```\n#0 [internal function]: App\\Services\\EggLayer->hatch()\n#1 /var/www/html/vendor/laravel/framework/src/Illuminate/Container/Container.php:803\n#2 /var/www/html/public/index.php:56\n```"
+                    ]
                 ]
             ]
         ]);
         $options = [
-            'http' => [
-                'method'  => 'POST',
-                'header'  => "Content-Type: application/json\r\n",
-                'content' => $payload,
-                'timeout' => 5,
+            "http" => [
+                "method"  => "POST",
+                "header"  => "Content-Type: application/json\r\n",
+                "content" => $payload,
+                "timeout" => 5,
             ],
         ];
         $context = stream_context_create($options);
