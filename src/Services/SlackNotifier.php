@@ -2,67 +2,86 @@
 
 namespace G4\Egg\Services;
 
+use G4\Egg\Models\CaughtException;
+
 class SlackNotifier
 {
     /**
      * Send a message to Slack using the webhook URL from the environment.
      *
-     * @param string $message
+     * @param $message
      * @return bool true on success, false on failure
      */
-    public static function send(string $message): bool
+    public static function send($content): bool
     {
         $webhookUrl = config("egg.slack_webhook_url");
         if (!$webhookUrl) {
             return false;
         }
 
-        $payload = json_encode([
-            "text" => "Fallback tekst: En alvorlig fejl er sket.",
-            "blocks" => [
-                [
-                    "type" => "header",
-                    "text" => [
-                        "type" => "plain_text",
-                        "text" => "🚨 Ny Exception Rapporteret (EggBot)"
-                    ]
-                ],
-                [
-                    "type" => "section",
-                    "fields" => [
-                        [
+        if ($content == typeOf(CaughtException::class))
+        {
+            $exceptionClass = $content->exception_class;
+            $message = $content->message;
+            $file = $content->file;
+            $line = $content->line;
+            $trace = $content->trace;
+            $category = $content->category;
+
+            $payload = json_encode([
+                "text" => "Fallback tekst: En alvorlig fejl er sket.",
+                "blocks" => [
+                    [
+                        "type" => "header",
+                        "text" => [
+                            "type" => "plain_text",
+                            "text" => "🚨 New Exception Reported (EggBot)"
+                        ]
+                    ],
+                    [
+                        "type" => "section",
+                        "fields" => [
+                            [
+                                "type" => "mrkdwn",
+                                "text" => "*Type:*\n`$exceptionClass`"
+                            ],
+                            [
+                                "type" => "mrkdwn",
+                                "text" => "*Category:*\n`$category`"
+                            ],
+                            [
+                                "type" => "mrkdwn",
+                                "text" => "*Path:*\n`$file:$line`"
+                            ]
+                        ]
+                    ],
+                    [
+                        "type" => "divider"
+                    ],
+                    [
+                        "type" => "section",
+                        "text" => [
                             "type" => "mrkdwn",
-                            "text" => "*Type:*\n`RuntimeException`"
-                        ],
-                        [
+                            "text" => "*Message:*\n`$message`"
+                        ]
+                    ],
+                    [
+                        "type" => "section",
+                        "text" => [
                             "type" => "mrkdwn",
-                            "text" => "*Miljø:*\n`production`"
-                        ],
-                        [
-                            "type" => "mrkdwn",
-                            "text" => "*Fil:*\n`/var/www/html/app/Services/EggLayer.php:42`"
+                            "text" => "*Stack Trace:*\n```$trace```"
                         ]
                     ]
-                ],
-                [
-                    "type" => "divider"
-                ],
-                [
-                    "type" => "section",
-                    "text" => [
-                        "type" => "mrkdwn",
-                        "text" => "*Besked:*\n`Something about eggs went terribly wrong.`"
-                    ]
-                ],
-                [
-                    "type" => "section",
-                    "text" => [
-                        "type" => "mrkdwn",
-                        "text" => "*Stack Trace (Uddrag):*\n```\n#0 [internal function]: App\\Services\\EggLayer->hatch()\n#1 /var/www/html/vendor/laravel/framework/src/Illuminate/Container/Container.php:803\n#2 /var/www/html/public/index.php:56\n```"
-                    ]
                 ]
-            ]
-        ]);
+            ]);
+        }
+        else
+        {
+            $payload = json_encode([
+                "text" => $content
+            ]);
+        }
+
         $options = [
             "http" => [
                 "method"  => "POST",
