@@ -20,9 +20,9 @@ class SlackNotifier
             return false;
         }
 
-        if ($content instanceof CaughtException)
-        {
-            dump("Sending exception to Slack");
+        if ($content instanceof CaughtException) {
+            dump("Sending exception to Slack: ", $content);
+
             $exceptionClass = $content->exception_class ?? "Not Found";
             $message = $content->message ?? "Not Found";
             $file = $content->file ?? "Not Found";
@@ -30,7 +30,7 @@ class SlackNotifier
             $trace = $content->trace ?? "Not Found";
             $category = $content->category ?? "Not Found";
 
-            $payload = json_encode([
+            $data = [
                 "text" => "Fallback tekst: En alvorlig fejl er sket.",
                 "blocks" => [
                     [
@@ -45,15 +45,15 @@ class SlackNotifier
                         "fields" => [
                             [
                                 "type" => "mrkdwn",
-                                "text" => "*Type:*\n`$exceptionClass`"
+                                "text" => "*Type:*\n`{$exceptionClass}`"
                             ],
                             [
                                 "type" => "mrkdwn",
-                                "text" => "*Category:*\n`$category`"
+                                "text" => "*Category:*\n`{$category}`"
                             ],
                             [
                                 "type" => "mrkdwn",
-                                "text" => "*Path:*\n`$file:$line`"
+                                "text" => "*Path:*\n`{$file}:{$line}`"
                             ]
                         ]
                     ],
@@ -64,18 +64,20 @@ class SlackNotifier
                         "type" => "section",
                         "text" => [
                             "type" => "mrkdwn",
-                            "text" => "*Message:*\n`$message`"
+                            "text" => "*Message:*\n`{$message}`"
                         ]
                     ],
                     [
                         "type" => "section",
                         "text" => [
                             "type" => "mrkdwn",
-                            "text" => "*Stack Trace:*\n``` " . $trace . "```"
+                            "text" => "*Stack Trace:*\n```{$trace}```"
                         ]
                     ]
                 ]
-            ]);
+            ];
+
+            $payload = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
         else
         {
