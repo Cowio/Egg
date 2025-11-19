@@ -21,6 +21,7 @@ class SlackNotifier
 
         if ($content === typeOf(CaughtException::class))
         {
+            dump("Sending exception to Slack: ", $content);
             $exceptionClass = $content->exception_class ? : "Not Found";
             $message = $content->message ? : "Not Found";
             $file = $content->file ? : "Not Found";
@@ -77,6 +78,7 @@ class SlackNotifier
         }
         else
         {
+            dump("Sending message to Slack: ", $content);
             $payload = json_encode([
                 "text" => $content
             ]);
