@@ -20,15 +20,15 @@ class SlackNotifier
             return false;
         }
 
-        if ($content === typeOf(CaughtException::class))
+        if ($content instanceof CaughtException)
         {
             dump("Sending exception to Slack: ", $content);
-            $exceptionClass = $content->exception_class ? : "Not Found";
-            $message = $content->message ? : "Not Found";
-            $file = $content->file ? : "Not Found";
-            $line = $content->line ? : "Not Found";
-            $trace = $content->trace ? : "Not Found";
-            $category = $content->category ? : "Not Found";
+            $exceptionClass = $content->exception_class ?? "Not Found";
+            $message = $content->message ?? "Not Found";
+            $file = $content->file ?? "Not Found";
+            $line = $content->line ?? "Not Found";
+            $trace = $content->trace ?? "Not Found";
+            $category = $content->category ?? "Not Found";
 
             $payload = json_encode([
                 "text" => "Fallback tekst: En alvorlig fejl er sket.",
@@ -71,7 +71,7 @@ class SlackNotifier
                         "type" => "section",
                         "text" => [
                             "type" => "mrkdwn",
-                            "text" => "*Stack Trace:*\n```$trace```"
+                            "text" => "*Stack Trace:*\n``` " . $trace . "```"
                         ]
                     ]
                 ]
