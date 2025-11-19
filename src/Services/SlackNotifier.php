@@ -79,6 +79,7 @@ class SlackNotifier
                 ]
             ];
             $payload = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            dump("After Payload");
         }
         else
         {
