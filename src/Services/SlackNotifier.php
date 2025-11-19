@@ -21,16 +21,12 @@ class SlackNotifier
         }
 
         if ($content instanceof CaughtException) {
-            dump("Sending exception to Slack: ");
-
             $exceptionClass = $content->exception_class ?? "Not Found";
             $message = $content->message ?? "Not Found";
             $file = $content->file ?? "Not Found";
             $line = $content->line ?? "Not Found";
             $trace = $content->trace ?? "Not Found";
             $category = $content->category ?? "Not Found";
-
-            dump($exceptionClass, $message, $file, $line);
 
             $data = [
                 "text" => "Fallback tekst: En alvorlig fejl er sket.",
@@ -68,22 +64,13 @@ class SlackNotifier
                             "type" => "mrkdwn",
                             "text" => "*Message:*\n`{$message}`"
                         ]
-                    ],
-                    [
-                        "type" => "section",
-                        "text" => [
-                            "type" => "mrkdwn",
-                            "text" => "*Stack Trace:*\n```Trace...```"
-                        ]
                     ]
                 ]
             ];
             $payload = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            dump("After Payload");
         }
         else
         {
-            dump("Sending message to Slack: ", $content);
             $payload = json_encode([
                 "text" => $content
             ]);
