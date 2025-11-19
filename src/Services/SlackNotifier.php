@@ -73,7 +73,7 @@ class SlackNotifier
                         "type" => "section",
                         "text" => [
                             "type" => "mrkdwn",
-                            "text" => "*Stack Trace:*\n```{$trace}```"
+                            "text" => "*Stack Trace:*\n```Trace...```"
                         ]
                     ]
                 ]
