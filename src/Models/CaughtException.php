@@ -2,7 +2,6 @@
 
 namespace G4\Egg\Models;
 
-use AllowDynamicProperties;
 use Illuminate\Database\Eloquent\Model;
 
 class CaughtException extends Model
