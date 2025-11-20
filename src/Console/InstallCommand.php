@@ -25,6 +25,13 @@ class InstallCommand extends Command
             '--force' => true,
         ]);
 
+        // Publish Prism config
+        $this->info('🪄 Publishing Prism config...');
+        $this->callSilent('vendor:publish', [
+            '--tag' => 'prism-config',
+            '--force' => false, // don't overwrite if exists
+        ]);
+
         $this->info('🔄 Running migrations...');
         $this->call('migrate');
 
