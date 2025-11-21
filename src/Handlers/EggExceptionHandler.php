@@ -15,6 +15,7 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
+
         // Custom logic to log exception to database or external service can be added here
         $exception = CaughtException::fromException($e);
 
