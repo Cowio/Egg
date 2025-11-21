@@ -2,21 +2,25 @@
 
 namespace G4\Egg\Handlers;
 
-use G4\Egg\Models\CaughtException;
-use G4\Egg\Services\SlackNotifier;
-use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
-use Prism\Prism\Enums\Provider;
-use Prism\Prism\Facades\Prism;
+use G4\Egg\Handlers\ProcessReport;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
 class EggExceptionHandler extends ExceptionHandler
 {
-
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
-        dump("beginning exception report handling");
-        dispatch(new processReport())->handleReport($e);
+        // Dispatch async job with serializable payload so workers can process concurrently
+        $payload = [
+            'exception_class' => get_class($e),
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ];
+
+        ProcessReport::dispatch($payload);
 
         parent::report($e); // Call the parent report method to ensure default behavior
     }
