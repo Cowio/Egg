@@ -15,20 +15,7 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
-        // Custom logic to log exception to database or external service can be added here
-        $exception = CaughtException::fromException($e);
-
-        $response = Prism::text()
-            ->using(Provider::TryFrom(config('egg.ai_provider')) ?? 'Gemini', config("egg.ai_model"))
-            ->withPrompt("Respond with either External or Internal based on whether the following exception is caused by external factors (like user input, network issues, third-party services) or internal factors (like bugs in the code, server issues). Exception message: " . $exception)
-            ->asText();
-
-        $exception->category = $response->text; // You can categorize exceptions if needed
-        $exception->hash = md5($e->getMessage() . $e->getFile() . $e->getLine());
-        $exception->save();
-
-        SlackNotifier::send($exception);
-
+        dispatch(new processReport())->handleReport($e);
         parent::report($e); // Call the parent report method to ensure default behavior
     }
 }
