@@ -15,7 +15,9 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
+        dump("beginning exception report handling");
         dispatch(new processReport())->handleReport($e);
+
         parent::report($e); // Call the parent report method to ensure default behavior
     }
 }
