@@ -17,7 +17,7 @@ class EggExceptionHandler extends ExceptionHandler
     public function report(Throwable $e): void
     {
         dump("Reporting exception asynchronously...");
-        AsyncHandler::dispatch(function (Throwable $e)
+        AsyncHandler::timeout(10)->dispatch(function (Throwable $e)
         {
             dump("Inside async exception handler...");
             // Custom logic to log exception to database or external service can be added here
