@@ -19,6 +19,7 @@ class EggExceptionHandler extends ExceptionHandler
         dump("Reporting exception asynchronously...");
         AsyncHandler::dispatch(function (Throwable $e)
         {
+            dump("Inside async exception handler...");
             // Custom logic to log exception to database or external service can be added here
             $exception = CaughtException::fromException($e);
             $response = Prism::text()
