@@ -2,14 +2,10 @@
 
 namespace G4\Egg\Handlers;
 
-use G4\Egg\Models\CaughtException;
-use G4\Egg\Services\SlackNotifier;
-use G4\Egg\Handlers\ExceptionReporter;
+use G4\Egg\Async\ExceptionReporter;
 use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
-use Prism\Prism\Enums\Provider;
-use Prism\Prism\Facades\Prism;
-use SaeedVaziry\LaravelAsync\Facades\AsyncHandler;
 use Illuminate\Support\Facades\Log;
+use SaeedVaziry\LaravelAsync\Facades\AsyncHandler;
 use Throwable;
 
 class EggExceptionHandler extends ExceptionHandler

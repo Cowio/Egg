@@ -1,13 +1,14 @@
 ﻿<?php
 
-namespace G4\Egg\Handlers;
+namespace G4\Egg\Async;
 
 use G4\Egg\Models\CaughtException;
 use G4\Egg\Services\SlackNotifier;
+use Illuminate\Support\Facades\Log;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Prism;
-use Illuminate\Support\Facades\Log;
 use Throwable;
+
 class ExceptionReporter
 {
     public function __construct(private Throwable $e, private string $hash) {}
