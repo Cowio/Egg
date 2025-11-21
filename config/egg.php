@@ -3,7 +3,7 @@
 return [
 
     'slack_webhook_url' => env('EGG_SLACK_WEBHOOK_URL'),
-    'ai_provider' => env('EGG_AI_PROVIDER'),
-    'ai_model' => env('EGG_AI_MODEL')
+    'ai_provider' => 'Gemini',
+    'ai_model' => 'gemini-2.0-flash-lite'
 
 ];
