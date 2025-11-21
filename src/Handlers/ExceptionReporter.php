@@ -6,19 +6,17 @@ use G4\Egg\Models\CaughtException;
 use G4\Egg\Services\SlackNotifier;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Prism;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 class ExceptionReporter
 {
-    public function __construct(private Throwable $e) {}
+    public function __construct(private Throwable $e, private string $hash) {}
 
     public function __invoke(): void
     {
-        dump('Async handler started', [
-            'message' => $this->e->getMessage(),
-            'file' => $this->e->getFile(),
-            'line' => $this->e->getLine(),
-        ]);
+        Log::info('Async exception reporter started', ['hash' => $this->hash]);
 
+        try {
         $exception = CaughtException::fromException($this->e);
 
         $response = Prism::text()
@@ -31,6 +29,14 @@ class ExceptionReporter
         $exception->save();
 
         SlackNotifier::send($exception);
+        }
+        catch(Throwable $inner)
+        {
+            Log::error('Async exception reporter failed', [
+                'hash' => $this->hash,
+                'error' => $inner->getMessage(),
+            ]);
+        }
 
         dump('Async handler finished', ['hash' => $exception->hash]);
     }

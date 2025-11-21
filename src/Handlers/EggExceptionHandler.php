@@ -4,21 +4,40 @@ namespace G4\Egg\Handlers;
 
 use G4\Egg\Models\CaughtException;
 use G4\Egg\Services\SlackNotifier;
+use G4\Egg\Handlers\ExceptionReporter;
 use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Prism;
 use SaeedVaziry\LaravelAsync\Facades\AsyncHandler;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class EggExceptionHandler extends ExceptionHandler
 {
 
+    protected array $reported = [];
+
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
-        dump("Reporting exception asynchronously...");
+        $hash = md5($e->getMessage() . $e->getFile() . $e->getLine());
 
-        AsyncHandler::timeout(10)->dispatch(new ExceptionReporter($e));
+        if (isset($this->reported[$hash])) {
+            Log::info('Skipping duplicate exception report', ['hash' => $hash]);
+            parent::report($e);
+            return;
+        }
+
+        $this->reported[$hash] = true;
+
+        Log::info('Scheduling async exception report', [
+            'hash' => $hash,
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+
+        AsyncHandler::timeout(10)->dispatch(new ExceptionReporter($e, $hash));
 //        AsyncHandler::timeout(10)->dispatch(function () use ($e)
 //        {
 //            info("Async handler started");
