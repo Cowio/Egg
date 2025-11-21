@@ -20,6 +20,7 @@
   "prefer-stable": true,
   "require": {
     "illuminate/support": "^10.0|^11.0|^12.0",
-    "prism-php/prism": "dev-main"
+    "prism-php/prism": "dev-main",
+    "saeedvaziry/laravel-async": "^1.3"
   }
 }
