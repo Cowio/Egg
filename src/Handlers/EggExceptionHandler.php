@@ -7,6 +7,7 @@ use G4\Egg\Services\SlackNotifier;
 use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Prism;
+use SaeedVaziry\LaravelAsync\Facades\AsyncHandler;
 use Throwable;
 
 class EggExceptionHandler extends ExceptionHandler
@@ -15,20 +16,24 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
+        dump("Reporting exception asynchronously...");
+        AsyncHandler::dispatch(function (Throwable $e)
+        {
+            // Custom logic to log exception to database or external service can be added here
+            $exception = CaughtException::fromException($e);
+            $response = Prism::text()
+                ->using(Provider::TryFrom(config('egg.ai_provider')), config("egg.ai_model"))
+                ->withPrompt("Respond with either External or Internal based on whether the following exception is caused by external factors (like user input, network issues, third-party services) or internal factors (like bugs in the code, server issues). Exception message: " . $exception)
+                ->asText();
 
-        // Custom logic to log exception to database or external service can be added here
-        $exception = CaughtException::fromException($e);
+            $exception->category = $response->text; // You can categorize exceptions if needed
+            $exception->hash = md5($e->getMessage() . $e->getFile() . $e->getLine());
+            $exception->save();
 
-        $response = Prism::text()
-            ->using(Provider::TryFrom(config('egg.ai_provider')), config("egg.ai_model"))
-            ->withPrompt("Respond with either External or Internal based on whether the following exception is caused by external factors (like user input, network issues, third-party services) or internal factors (like bugs in the code, server issues). Exception message: " . $exception)
-            ->asText();
+            SlackNotifier::send($exception);
 
-        $exception->category = $response->text; // You can categorize exceptions if needed
-        $exception->hash = md5($e->getMessage() . $e->getFile() . $e->getLine());
-        $exception->save();
+        });
 
-        SlackNotifier::send($exception);
 
         parent::report($e); // Call the parent report method to ensure default behavior
     }
