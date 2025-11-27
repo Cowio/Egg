@@ -12,8 +12,10 @@ class EggExceptionHandler extends ExceptionHandler
     public function report(Throwable $e): void
     {
 
+        dump("EggExceptionHandler: Reporting exception - " . $e->getMessage());
+
         // HTTP POST request using Laravel's HTTP client, including exception details in the body
-        Http::asJson()->post('http://localhost:8080/api/exception', [
+        $response = Http::post('http://localhost:8080/api/exception', [
             'message' => $e->getMessage(),
             'exception_class' => get_class($e),
             'code' => $e->getCode(),
@@ -21,6 +23,8 @@ class EggExceptionHandler extends ExceptionHandler
             'line' => $e->getLine(),
             'trace' => $e->getTraceAsString(),
         ]);
+
+        dump($response);
 
 
 
