@@ -2,7 +2,6 @@
 
 namespace G4\Egg\Handlers;
 
-use G4\Egg\Jobs\SendEggReportJob;
 use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Http;
 use Throwable;
@@ -13,7 +12,7 @@ class EggExceptionHandler extends ExceptionHandler
     public function report(Throwable $e): void
     {
         // HTTP POST request using Laravel's HTTP client, including exception details in the body
-        $response = Http::post('http://localhost:8080/api/exception', [
+        Http::timeout(0.2)->post('http://localhost:8080/api/exception', [
             'message' => $e->getMessage(),
             'exception_class' => get_class($e),
             'code' => $e->getCode(),
