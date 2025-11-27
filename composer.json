@@ -20,6 +20,5 @@
   "prefer-stable": true,
   "require": {
     "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0",
-    "prism-php/prism": "dev-main"
   }
 }
