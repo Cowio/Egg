@@ -13,7 +13,7 @@ class EggExceptionHandler extends ExceptionHandler
     public function report(Throwable $e): void
     {
         // HTTP POST request using Laravel's HTTP client, including exception details in the body
-        SendEggReportJob::dispatch([
+        $response = Http::post('http://localhost:8080/api/exception', [
             'message' => $e->getMessage(),
             'exception_class' => get_class($e),
             'code' => $e->getCode(),
@@ -22,7 +22,7 @@ class EggExceptionHandler extends ExceptionHandler
             'trace' => $e->getTraceAsString(),
         ]);
 
-//        $response = Http::async()->post('http://localhost:8080/api/exception', [
+//        SendEggReportJob::dispatch([
 //            'message' => $e->getMessage(),
 //            'exception_class' => get_class($e),
 //            'code' => $e->getCode(),
