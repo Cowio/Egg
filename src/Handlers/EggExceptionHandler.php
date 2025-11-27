@@ -23,8 +23,10 @@ class EggExceptionHandler extends ExceptionHandler
                 'trace' => $e->getTraceAsString(),
             ])->then(function ($response) {
                 // Optional: log success silently
+                dump("EggExceptionHandler HTTP post succeeded with status: " . $response->status());
             })->catch(function ($e) {
                 // Optional: silently swallow errors
+                dump("EggExceptionHandler HTTP post failed: " . $e->getMessage());
             });
 
             // Return immediately, do not wait()
