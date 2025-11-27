@@ -32,6 +32,7 @@ class EggExceptionHandler extends ExceptionHandler
             // Return immediately, do not wait()
         } catch (\Throwable $t) {
             // Prevent egg-package from ever breaking the host app
+            dump("EggExceptionHandler encountered an error: " . $t->getMessage());
         }
 
 //        SendEggReportJob::dispatch([
