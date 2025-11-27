@@ -11,9 +11,6 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
-
-        dump("EggExceptionHandler: Reporting exception - " . $e->getMessage());
-
         // HTTP POST request using Laravel's HTTP client, including exception details in the body
         $response = Http::post('http://localhost:8080/api/exception', [
             'message' => $e->getMessage(),
