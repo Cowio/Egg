@@ -15,15 +15,14 @@ class EggExceptionHandler extends ExceptionHandler
         dump("EggExceptionHandler: Reporting exception - " . $e->getMessage());
 
         // HTTP POST request using Laravel's HTTP client, including exception details in the body
-        $response = Http::post('http://localhost:8000/api/exception');
-//        , [
-//            'message' => $e->getMessage(),
-//            'exception_class' => get_class($e),
-//            'code' => $e->getCode(),
-//            'file' => $e->getFile(),
-//            'line' => $e->getLine(),
-//            'trace' => $e->getTraceAsString(),
-//        ]);
+        $response = Http::post('http://eggplatform:8080/api/exception', [
+            'message' => $e->getMessage(),
+            'exception_class' => get_class($e),
+            'code' => $e->getCode(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ]);
 
         dump($response);
 
