@@ -21,9 +21,6 @@ class EggExceptionHandler extends ExceptionHandler
             'trace' => $e->getTraceAsString(),
         ]);
 
-        dump($response);
-
-
 
 //        $exception = CaughtException::fromException($e);
 //        $response = Prism::text()
