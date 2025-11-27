@@ -11,29 +11,16 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
-        // HTTP POST request using Laravel's HTTP client, including exception details in the body
-        try {
-            // Fire-and-forget async post
-            Http::async()->post('http://localhost:8080/api/exception', [
+        Http::withoutRedirecting()
+            ->timeout(0.1)
+            ->post('http://localhost:8080/api/exception', [
                 'message' => $e->getMessage(),
                 'exception_class' => get_class($e),
                 'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-            ])->then(function ($response) {
-                // Optional: log success silently
-                dump("EggExceptionHandler HTTP post succeeded with status: " . $response->status());
-            })->catch(function ($e) {
-                // Optional: silently swallow errors
-                dump("EggExceptionHandler HTTP post failed: " . $e->getMessage());
-            });
-
-            // Return immediately, do not wait()
-        } catch (\Throwable $t) {
-            // Prevent egg-package from ever breaking the host app
-            dump("EggExceptionHandler encountered an error: " . $t->getMessage());
-        }
+            ]);
 
 //        SendEggReportJob::dispatch([
 //            'message' => $e->getMessage(),
