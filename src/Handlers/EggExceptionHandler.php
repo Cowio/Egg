@@ -12,7 +12,6 @@ class EggExceptionHandler extends ExceptionHandler
     public function report(Throwable $e): void
     {
         Http::withoutRedirecting()
-            ->timeout(0.1)
             ->post('http://localhost:8080/api/exception', [
                 'message' => $e->getMessage(),
                 'exception_class' => get_class($e),
