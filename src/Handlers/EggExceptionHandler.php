@@ -11,15 +11,22 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
-        Http::async()
-            ->post('http://localhost:8080/api/exception', [
-                'exception_class' => get_class($e),
-                'message'         => $e->getMessage(),
-                'code'            => $e->getCode(),
-                'file'            => $e->getFile(),
-                'line'            => $e->getLine(),
-                'trace'           => $e->getTraceAsString(),
-            ]);
+        $payload = [
+            'message'         => $e->getMessage(),
+            'exception_class' => get_class($e),
+            'code'            => $e->getCode(),
+            'file'            => $e->getFile(),
+            'line'            => $e->getLine(),
+            'trace'           => $e->getTraceAsString(),
+        ];
+
+        // Fire-and-forget but guaranteed to send
+        $promise = Http::async()
+            ->timeout(2)
+            ->post('http://localhost:8080/api/exception', $payload);
+
+        // Wait at the end of the request lifecycle
+        register_shutdown_function(fn() => $promise->wait());
 
 //        Http::withoutRedirecting()
 //            ->post('http://localhost:8080/api/exception', [
