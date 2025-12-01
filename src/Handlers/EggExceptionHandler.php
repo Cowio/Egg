@@ -2,8 +2,8 @@
 
 namespace G4\Egg\Handlers;
 
-use GuzzleHttp\Client;
 use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Http;
 use Throwable;
 
 class EggExceptionHandler extends ExceptionHandler
@@ -11,18 +11,18 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
-        $client = new Client();
+        $payload = [
+            'message' => $e->getMessage(),
+            'exception_class' => get_class($e),
+            'code' => $e->getCode(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ];
 
-        $client->postAsync('http://localhost:8080/api/exception', [
-            'json' => [
-                'message' => $e->getMessage(),
-                'exception_class' => get_class($e),
-                'code' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]
-        ]);
+        register_shutdown_function(function () use ($payload) {
+            Http::async()->post('http://localhost:8080/api/exception', $payload);
+        });
 
 //        SendEggReportJob::dispatch([
 //            'message' => $e->getMessage(),
