@@ -20,9 +20,11 @@ class EggExceptionHandler extends ExceptionHandler
             'trace' => $e->getTraceAsString(),
         ];
 
-        register_shutdown_function(function () use ($payload) {
-            Http::async()->post('http://localhost:8080/api/exception', $payload);
-        });
+        Http::timeout(0.5)->async()->post('http://localhost:8080/api/exception', $payload);
+
+        // register_shutdown_function(function () use ($payload) {
+        //     Http::timeout(0.5)->async()->post('http://localhost:8080/api/exception', $payload);
+        // });
 
 //        SendEggReportJob::dispatch([
 //            'message' => $e->getMessage(),
