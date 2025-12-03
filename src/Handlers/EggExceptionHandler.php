@@ -21,9 +21,8 @@ class EggExceptionHandler extends ExceptionHandler
         ];
 
         // Fire-and-forget but guaranteed to send
-        $promise = Http::async()
-            ->timeout(2)
-            ->post('http://localhost:8080/api/exception', $payload);
+        $promise = Http::
+            post('http://localhost:8080/api/exception', $payload);
 
         // Wait at the end of the request lifecycle
         register_shutdown_function(fn() => $promise->wait());
