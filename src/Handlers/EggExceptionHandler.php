@@ -2,6 +2,7 @@
 
 namespace G4\Egg\Handlers;
 
+use G4\Egg\Jobs\SendEggReportJob;
 use Illuminate\Foundation\exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Http;
 use Throwable;
@@ -11,22 +12,14 @@ class EggExceptionHandler extends ExceptionHandler
     // Override report method to custom reporting of the exception
     public function report(Throwable $e): void
     {
-        $payload = [
-            'message'         => $e->getMessage(),
+        SendEggReportJob::dispatch([
+            'message' => $e->getMessage(),
             'exception_class' => get_class($e),
-            'code'            => $e->getCode(),
-            'file'            => $e->getFile(),
-            'line'            => $e->getLine(),
-            'trace'           => $e->getTraceAsString(),
-        ];
-
-        // Fire-and-forget but guaranteed to send
-        $promise = Http::async()->post
-            ('http://localhost:8080/api/exception', $payload);
-
-        // Wait at the end of the request lifecycle
-        register_shutdown_function(fn() => $promise->wait());
-
+            'code' => $e->getCode(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ]);
 //        Http::withoutRedirecting()
 //            ->post('http://localhost:8080/api/exception', [
 //                'message' => $e->getMessage(),
@@ -34,17 +27,9 @@ class EggExceptionHandler extends ExceptionHandler
 //                'code' => $e->getCode(),
 //                'file' => $e->getFile(),
 //                'line' => $e->getLine(),
-//                'trace' => $e->getTraceAsString()
+//                'trace' => $e->getTraceAsString(),
 //            ]);
 
-//        SendEggReportJob::dispatch([
-//            'message' => $e->getMessage(),
-//            'exception_class' => get_class($e),
-//            'code' => $e->getCode(),
-//            'file' => $e->getFile(),
-//            'line' => $e->getLine(),
-//            'trace' => $e->getTraceAsString(),
-//        ]);
 //
 //        $response->wait();
 
