@@ -10,7 +10,9 @@ class EggServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        dump("Egg-package booted!");
+        if (app()->runningInConsole()) {
+            dump("Egg-package booted!");
+        }
 
         // Publish config file
         $this->publishes([
