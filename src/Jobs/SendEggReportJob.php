@@ -22,7 +22,6 @@ class SendEggReportJob implements ShouldQueue
 
     public function handle()
     {
-//        dump("", $this->data);
         // Send the HTTP request to your platform
         Http::post('http://localhost:8080/api/exception', $this->data);
     }
