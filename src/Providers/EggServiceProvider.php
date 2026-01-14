@@ -14,24 +14,20 @@ class EggServiceProvider extends ServiceProvider
             \Log::info("Egg-package booted!");
         }
 
-        // Publish config file
         $this->publishes([
             __DIR__ . '/../../config/egg.php' => config_path('egg.php'),
         ], 'egg-config');
 
-        // Publish migrations
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
     public function register()
     {
-        // Merge the package config with the application's copy
         $this->mergeConfigFrom(
             __DIR__ . '/../../config/egg.php',
             'egg'
         );
 
-        // Register commands
         $this->commands([
             \G4\Egg\Console\InstallCommand::class,
         ]);
